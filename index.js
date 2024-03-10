@@ -24,35 +24,56 @@ document.addEventListener("DOMContentLoaded", function () {
 //global variables
 let lastKeyPressed = "";
 let score = 0;
+const uiScore = document.getElementById("score");
 const charArray = [];
-const demonWord = ["fire", "magic", "silence"];
+const demonWord = [
+  "fire",
+  "magic",
+  "silence",
+  "tornado",
+  "doom",
+  "storm",
+  "deflagration",
+  "destruction",
+  "malediction",
+  "rock",
+  "tsunami",
+];
+let currentDemonText = getRandomDemonWord();
 
 document.addEventListener("keydown", function zob(e) {
-  if (e.keyCode === 8) {
+  if (e.key === "Backspace") {
+    e.preventDefault();
     charArray.pop();
-  } else if (e.keyCode !== 32) {
+  } else if (e.key.length === 1) {
     lastKeyPressed = e.key;
     charArray.push(lastKeyPressed);
   }
+  uiScore.innerText = `Cancelled Spell: ${score}`;
   updateCanvas();
 });
 
 function updateCanvas() {
   const ctx = canvas.getContext("2d");
-  if (ctx) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.fillStyle = "white";
-    ctx.font = "48px sans-serif";
-    const text = charArray.join("");
-    const demonText = demonWord[0];
-    cancelSpell(text, demonText);
-    ctx.fillText(text, 10, 50);
-    ctx.fillText(demonText, 1000, 500);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.fillStyle = "white";
+  ctx.font = "48px sans-serif";
+  const text = charArray.join("");
+  cancelSpell(text);
+  ctx.fillText(text, 10, 50);
+  ctx.fillText(currentDemonText, canvas.width * 0.5, canvas.height * 0.4);
+}
+
+function cancelSpell(text) {
+  if (text.toLowerCase() === currentDemonText.toLocaleLowerCase()) {
+    score++;
+    charArray.length = 0;
+    currentDemonText = getRandomDemonWord();
+    updateCanvas();
   }
 }
 
-function cancelSpell(text, demonText) {
-  if (text == demonText) {
-    score++;
-  }
+function getRandomDemonWord() {
+  const randomIndex = Math.floor(Math.random() * demonWord.length);
+  return demonWord[randomIndex];
 }
