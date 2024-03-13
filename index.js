@@ -17,6 +17,7 @@ function adjustCanvasForHighDPI(canvas) {
 document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("canvas");
   adjustCanvasForHighDPI(canvas);
+  updateCanvas();
 });
 
 //end of screen resolution
@@ -40,6 +41,8 @@ const demonWord = [
   "tsunami",
 ];
 let currentDemonText = getRandomDemonWord();
+let demonTextX = canvas.width * 4;
+let animationFrameId = null;
 
 document.addEventListener("keydown", function zob(e) {
   if (e.key === "Backspace") {
@@ -56,12 +59,32 @@ document.addEventListener("keydown", function zob(e) {
 function updateCanvas() {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.fillStyle = "white";
-  ctx.font = "48px sans-serif";
+
+  // Base font size and max width calculation remains the same
+  const baseFontSize = 48;
+  ctx.font = `${baseFontSize}px sans-serif`;
+
+  // Drawing text logic remains the same...
   const text = charArray.join("");
-  cancelSpell(text);
+  ctx.fillStyle = "white";
   ctx.fillText(text, 10, 50);
-  ctx.fillText(currentDemonText, canvas.width * 0.5, canvas.height * 0.4);
+
+  // Demon text movement logic remains the same...
+  demonTextX -= 4;
+  let measuredWidth = ctx.measureText(currentDemonText).width;
+  if (demonTextX + measuredWidth < 0) {
+    demonTextX = canvas.width;
+    gameOver();
+  }
+  ctx.fillText(currentDemonText, demonTextX, canvas.height * 0.4);
+
+  cancelSpell(text);
+
+  // Cancel the previous animation frame before starting a new one
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+  }
+  animationFrameId = requestAnimationFrame(updateCanvas);
 }
 
 function cancelSpell(text) {
@@ -69,6 +92,7 @@ function cancelSpell(text) {
     score++;
     charArray.length = 0;
     currentDemonText = getRandomDemonWord();
+    demonTextX = canvas.width;
     updateCanvas();
   }
 }
@@ -76,4 +100,8 @@ function cancelSpell(text) {
 function getRandomDemonWord() {
   const randomIndex = Math.floor(Math.random() * demonWord.length);
   return demonWord[randomIndex];
+}
+
+function gameOver() {
+  score = 0;
 }
