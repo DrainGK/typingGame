@@ -22,13 +22,18 @@
         <div id="menu" class="menu">
             <h1>typing game</h1>
             <button id="start" class="start">start</button>
+            <select id="diff">
+                <option value="2">easy</option>
+                <option value="4" selected>normal</option>
+                <option value="6">hard</option>
+            </select>
             <div class="score-container">
                 <p id="best-score">Best score: 0</p>
                 <p id="best-time"> Best time: 00:00</p>
             </div>
         </div>
     </div>
-    <img class="wizard" src="./assets/wizard.gif" alt="wizard">
+    <img id="wizard" class="wizard" src="./assets/wizard.gif" alt="wizard">
     <img class="demon" src="./assets/demon.gif" alt="demon">
     <script src="index.js"></script>
 </body>

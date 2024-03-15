@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("canvas");
   adjustCanvasForHighDPI(canvas);
 });
+const diff = document.getElementById("diff");
 
 //global variables
 let lastKeyPressed = "";
@@ -27,6 +28,10 @@ let isGameOver = true;
 let startTime = 0;
 let currentTimeDisplay;
 let timerIntervalId = null;
+let backgroundMusic;
+let speed = 4;
+
+const wizard = document.getElementById("wizard");
 const menu = document.getElementById("menu");
 const start = document.getElementById("start")
 const text = document.getElementById("game-text");
@@ -55,6 +60,8 @@ let animationFrameId = null; // requestAnimationFrame
 const sounds = ["assets/game_music.mp3", "assets/spell.mp3", "assets/shield_hit.mp3", "assets/shield_break.mp3", "assets/cancel.mp3"];
 let gameSound;
 
+console.log(diff.value);
+
 document.addEventListener("keydown", function(e) {
   if (e.key === "Backspace") {
     e.preventDefault();
@@ -69,10 +76,19 @@ start.addEventListener("click", function(){
   menu.style.display = "none";
   startGame();
 })
-gameSound = new sound(sounds[0]);
+
+diff.addEventListener('change', function(){
+  speed = this.value;
+  console.log(speed);
+})
 
 function startGame(){
-  gameSound.play();
+  wizard.style.opacity = 1;
+
+  if(!backgroundMusic){
+    backgroundMusic = new sound(sounds[0], true);
+  }
+  backgroundMusic.play();
   isGameOver = false;
   startTime = Date.now();
   updateTimeDisplay();
@@ -141,13 +157,14 @@ function updateCanvas() {
   }
 
   // Demon text movement logic
-  demonTextX -= 4;
+  demonTextX -= speed;
   let measuredWidth = ctx.measureText(currentDemonText).width;
   if (demonTextX <= 0) {
     demonTextX = canvas.width;
     gameOver();
   } else if (demonTextX < shieldX && shield > 0) {
     shield--;
+    speed ++;
     gameSound = new sound(sounds[2]);
     gameSound.play();
     updateShieldDisplay();
@@ -209,9 +226,11 @@ function updateShieldDisplay() {
   uiShield.innerText = `Shield: ${shield}`; //displaying the score visually incrementing it
 }
 
-function sound(src){
+function sound(src, loop = false){
   this.sound = document.createElement("audio");
     this.sound.src = src;
+    this.sound.loop = loop;
+    
     this.sound.setAttribute("preload", "auto");
     this.sound.setAttribute("controls", "none");
     this.sound.style.display = "none";
@@ -221,25 +240,34 @@ function sound(src){
     }
     this.stop = function(){
         this.sound.pause();
+        this.sound.currentTime = 0;
     }    
 }
+
+
 
 function gameOver() {
   if(timerIntervalId !== null){
     clearInterval(timerIntervalId);
     timerIntervalId = null;
   }
-  gameSound.stop();
+  wizard.style.opacity = 0;
+  if (backgroundMusic) {
+    backgroundMusic.stop();
+  }
+  gameSound = new sound(sounds[1]);
+  gameSound.play();
   charArray.length = 0;
   isGameOver = true;
   cancelAnimationFrame(animationFrameId);
-
+  
   score = 0;
   shield = 0;
+  speed=diff.value;
   text.innerText = "You died !!!";
   updateScoreDisplay();
   updateShieldDisplay();
-
+  
   menu.style.display = "flex";
 
 }
