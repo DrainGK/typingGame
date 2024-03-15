@@ -16,12 +16,16 @@ body{
     font-style: normal;
 }
 
-canvas{
+img{
+    position: fixed;
+    bottom: 0;
+    transform: translateY(-200%);
 
-    height: 75vh;
-    width: 75vw;
+    width: 10vw;
+}
 
-    border: 1px solid whitesmoke
+.demon{
+    right: 0;
 }
 
 header{
@@ -39,7 +43,7 @@ header{
 }
 
 .game-container{
-    
+    position: relative;
     height: 100%;
 
     display: flex;
@@ -51,3 +55,57 @@ header{
     font-size: 2rem;
 }
 
+
+canvas{
+
+    height: 75vh;
+    width: 75vw;
+
+    border: 1px solid whitesmoke
+}
+
+.menu{
+    position: fixed;
+    height: 50vh;
+    width: 50vh;
+    background-color: rgb(26, 26, 26);
+    border: 1px solid white;
+    box-shadow: 0px 5px 15px black;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+}
+
+h1{
+    margin-top: 2rem;
+}
+
+.start{
+    width: 60%;
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    font-size: 2.5rem;
+    font-family: "Anta", sans-serif;
+    font-weight: 400;
+    padding: 1rem;
+
+    margin-top: 4rem;
+}
+
+.start:hover{
+    box-shadow: 0px 5px 15px black;
+    transform: scale(1.1);
+}
+
+.score-container{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+    margin-top: 3rem;
+    gap: 1rem
+    ;
+}
