@@ -141,7 +141,7 @@ function updateCanvas() {
   }
 
   // Demon text movement logic
-  demonTextX -= 7;
+  demonTextX -= 4;
   let measuredWidth = ctx.measureText(currentDemonText).width;
   if (demonTextX <= 0) {
     demonTextX = canvas.width;
