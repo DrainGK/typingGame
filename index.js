@@ -1,3 +1,27 @@
+//creating classes
+
+class Game{
+  //game features
+}
+
+class SoundManager{
+  //Gerer le son
+}
+
+class Wizard{
+  //gerer les characteristiques du joueur
+}
+
+class Demon{
+  //gerer les characteristiques du demon
+}
+
+/*
+Je dois declarer les variables, je ne sais pas si je dois les declarer
+dans une classe ou dans hors classes.
+Je vais faire des iterations
+*/
+
 // for screen resolution
 function adjustCanvasForHighDPI(canvas) {
   const ctx = canvas.getContext("2d");
@@ -17,11 +41,13 @@ function adjustCanvasForHighDPI(canvas) {
 document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("canvas");
   adjustCanvasForHighDPI(canvas);
+  displayHighScore();
 });
 const diff = document.getElementById("diff");
 
 //global variables
 let lastKeyPressed = "";
+let currentScore;
 let score = 0;
 let shield = 3;
 let isGameOver = true;
@@ -33,7 +59,7 @@ let speed = 4;
 
 const wizard = document.getElementById("wizard");
 const menu = document.getElementById("menu");
-const start = document.getElementById("start")
+const start = document.getElementById("start");
 const text = document.getElementById("game-text");
 const time = document.getElementById("time");
 const uiScore = document.getElementById("score");
@@ -57,12 +83,18 @@ let demonTextX = canvas.width * 2; // horizontal axis for demon spell initialize
 let demonTextY = 0.1 + Math.random() * 0.8;
 let animationFrameId = null; // requestAnimationFrame
 
-const sounds = ["assets/game_music.mp3", "assets/spell.mp3", "assets/shield_hit.mp3", "assets/shield_break.mp3", "assets/cancel.mp3"];
+const sounds = [
+  "assets/game_music.mp3",
+  "assets/spell.mp3",
+  "assets/shield_hit.mp3",
+  "assets/shield_break.mp3",
+  "assets/cancel.mp3",
+];
 let gameSound;
 
 console.log(diff.value);
 
-document.addEventListener("keydown", function(e) {
+document.addEventListener("keydown", function (e) {
   if (e.key === "Backspace") {
     e.preventDefault();
     charArray.pop(); //here we are taking of the last object of the array
@@ -72,20 +104,20 @@ document.addEventListener("keydown", function(e) {
   }
 });
 
-start.addEventListener("click", function(){
+start.addEventListener("click", function () {
   menu.style.display = "none";
   startGame();
-})
+});
 
-diff.addEventListener('change', function(){
+diff.addEventListener("change", function () {
   speed = this.value;
   console.log(speed);
-})
+});
 
-function startGame(){
+function startGame() {
   wizard.style.opacity = 1;
 
-  if(!backgroundMusic){
+  if (!backgroundMusic) {
     backgroundMusic = new sound(sounds[0], true);
   }
   backgroundMusic.play();
@@ -93,7 +125,7 @@ function startGame(){
   startTime = Date.now();
   updateTimeDisplay();
 
-  if(timerIntervalId !== null){
+  if (timerIntervalId !== null) {
     clearInterval(timerIntervalId);
   }
 
@@ -108,16 +140,31 @@ function startGame(){
   updateCanvas();
 }
 
-function updateTimeDisplay(){
+function updateTimeDisplay() {
   const elapsedTime = Date.now() - startTime;
   const totalSeconds = Math.floor(elapsedTime / 1000);
-  const minutes = Math.floor(totalSeconds/60).toString().padStart(2,'0');
-  const seconds = (totalSeconds % 60).toString().padStart(2,'0');
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
   currentTimeDisplay = `${minutes}:${seconds}`;
 
-  if (time){
+  if (time) {
     time.innerText = currentTimeDisplay;
   }
+}
+
+function timeToSeconds(timeStr) {
+  const [minutes, seconds] = timeStr.split(":").map(Number);
+  return minutes * 60 + seconds;
+}
+
+function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
 }
 
 function updateCanvas() {
@@ -128,7 +175,7 @@ function updateCanvas() {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
   // Base font size and max width calculation
-  const baseFontSize = 48;
+  const baseFontSize = Math.min(canvas.height / 20, 48);
   ctx.font = `${baseFontSize}px sans-serif`;
 
   // Drawing text logic
@@ -149,11 +196,10 @@ function updateCanvas() {
     ctx.stroke();
   }
 
-  if(shield == 0 ){
+  if (shield == 0) {
     gameSound = new sound(sounds[3]);
     gameSound.play();
     gameSound.stop();
-  
   }
 
   // Demon text movement logic
@@ -164,7 +210,7 @@ function updateCanvas() {
     gameOver();
   } else if (demonTextX < shieldX && shield > 0) {
     shield--;
-    speed ++;
+    speed++;
     gameSound = new sound(sounds[2]);
     gameSound.play();
     updateShieldDisplay();
@@ -174,7 +220,6 @@ function updateCanvas() {
     charArray.length = 0;
     currentDemonText = getRandomDemonWord();
   }
-  console.log(demonTextY);
   ctx.fillText(currentDemonText, demonTextX, canvas.height * demonTextY);
 
   cancelSpell(text);
@@ -226,28 +271,63 @@ function updateShieldDisplay() {
   uiShield.innerText = `Shield: ${shield}`; //displaying the score visually incrementing it
 }
 
-function sound(src, loop = false){
+function sound(src, loop = false) {
   this.sound = document.createElement("audio");
-    this.sound.src = src;
-    this.sound.loop = loop;
-    
-    this.sound.setAttribute("preload", "auto");
-    this.sound.setAttribute("controls", "none");
-    this.sound.style.display = "none";
-    document.body.appendChild(this.sound);
-    this.play = function(){
-        this.sound.play();
-    }
-    this.stop = function(){
-        this.sound.pause();
-        this.sound.currentTime = 0;
-    }    
+  this.sound.src = src;
+  this.sound.loop = loop;
+
+  this.sound.setAttribute("preload", "auto");
+  this.sound.setAttribute("controls", "none");
+  this.sound.style.display = "none";
+  document.body.appendChild(this.sound);
+  this.play = function () {
+    this.sound.play();
+  };
+  this.stop = function () {
+    this.sound.pause();
+    this.sound.currentTime = 0;
+  };
 }
 
+function saveHighScore(newScore) {
+  localStorage.setItem("highScore", newScore.toString());
+}
 
+function saveHighTime(newHighTime) {
+  localStorage.setItem("highTime", newHighTime);
+}
+
+function loadHighScore() {
+  const highScore = parseInt(localStorage.getItem("highScore") || "0", 10);
+  return highScore;
+}
+
+function loadHighTime() {
+  const highTime = localStorage.getItem("highTime" || "00:00");
+  return highTime;
+}
+
+function updateHighScore(currentScore) {
+  const highScore = loadHighScore();
+
+  if (currentScore > highScore) {
+    saveHighScore(currentScore);
+    console.log("New high score saved: ", currentScore);
+  }
+}
+
+function displayHighScore() {
+  const highScore = loadHighScore();
+  // const highTime = loadHighTime();
+
+  document.getElementById(
+    "best-score"
+  ).textContent = `High Score: ${highScore}`;
+  // document.getElementById("best-time").textContent = `High Time: ${highTime}`;
+}
 
 function gameOver() {
-  if(timerIntervalId !== null){
+  if (timerIntervalId !== null) {
     clearInterval(timerIntervalId);
     timerIntervalId = null;
   }
@@ -260,14 +340,16 @@ function gameOver() {
   charArray.length = 0;
   isGameOver = true;
   cancelAnimationFrame(animationFrameId);
-  
+
+  currentScore = score;
   score = 0;
   shield = 0;
-  speed=diff.value;
+  speed = diff.value;
   text.innerText = "You died !!!";
   updateScoreDisplay();
   updateShieldDisplay();
-  
-  menu.style.display = "flex";
+  updateHighScore(currentScore);
+  displayHighScore();
 
+  menu.style.display = "flex";
 }
