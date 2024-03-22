@@ -1,19 +1,298 @@
 //creating classes
 
-class Game{
+/*
+the class game isn't too long?
+I mean over a hundrend lines isn't too big?
+It probably mean that you too many unrelated thing OR
+I can manage it better with other classes and calling them insinde the game management
+
+for me a class it's a living thing doing some actions and working all together as an OOP society
+
+yes I am taking notes here, otherwise I will forget for a future report lol
+*/
+class Game {
   //game features
+  constructor() {
+
+    this.wizard = new Wizard();
+    this.demon = new Demon();
+
+    //initializing UI
+
+    this.soundManager = new SoundManager();
+    this.uiManager = new GameUI();
+
+    //initializing game variables
+    this.text = document.getElementById("game-text");
+    this.time = document.getElementById("time");
+    this.uiScore = document.getElementById("score");
+    this.uiShield = document.getElementById("shield");
+    this.charArray = [];
+
+    this.lastKeyPressed = "";
+    this.currentScore;
+    this.score = 0;
+    this.shield = 3;
+    this.isGameOver = true;
+    this.startTime = 0;
+    this.currentTimeDisplay;
+    this.timerIntervalId = null;
+  }
+
+  start() {
+    // wizard.style.opacity = 1;
+
+    if (!backgroundMusic) {
+      backgroundMusic = new sound(sounds[0], true);
+    }
+    backgroundMusic.play();
+    this.isGameOver = false;
+    this.startTime = Date.now();
+    this.updateTimeDisplay();
+
+    if (this.timerIntervalId !== null) {
+      clearInterval(timerIntervalId);
+    }
+
+    this.timerIntervalId = setInterval(this.updateTimeDisplay, 1000);
+
+    this.charArray.length = 0;
+    this.score = 0;
+    this.shield = 3;
+
+    this.uiShield.innerText = `Shield: ${shield}`;
+
+    updateCanvas();
+  }
+
+  gameOver() {
+    if (this.timerIntervalId !== null) {
+      clearInterval(this.timerIntervalId);
+      this.timerIntervalId = null;
+    }
+    wizard.style.opacity = 0;
+    if (backgroundMusic) {
+      backgroundMusic.stop();
+    }
+    gameSound = new sound(sounds[1]);
+    gameSound.play();
+    this.charArray.length = 0;
+    this.isGameOver = true;
+    cancelAnimationFrame(animationFrameId);
+
+    this.currentScore = this.score;
+    this.score = 0;
+    this.shield = 0;
+    this.speed = diff.value;
+    text.innerText = "You died !!!";
+    gameUI.updateScoreDisplay();
+    updateShieldDisplay();
+    updateHighScore(currentScore);
+    displayHighScore();
+
+    menu.style.display = "flex";
+  }
+
+  formatTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  }
+
+  // Optimized updateTimeDisplay to use the common formatTime function
+  updateTimeDisplay() {
+    const elapsedTime = Date.now() - startTime; // Assuming startTime is defined elsewhere
+    const totalSeconds = Math.floor(elapsedTime / 1000);
+    const currentTimeDisplay = formatTime(totalSeconds); // Use the common formatTime function
+
+    if (time) {
+      // Assuming 'time' is a DOM element defined elsewhere
+      time.innerText = currentTimeDisplay;
+    }
+  }
+
+  // Converts a "MM:SS" string to total seconds
+  timeToSeconds(timeStr) {
+    const [minutes, seconds] = timeStr.split(":").map(Number);
+    return minutes * 60 + seconds;
+  }
 }
 
-class SoundManager{
-  //Gerer le son
+//game ui class done
+
+class GameUI {
+  constructor() {
+    this.text = document.getElementById("game-text");
+    this.time = document.getElementById("time");
+    this.uiScore = document.getElementById("score");
+    this.uiShield = document.getElementById("shield");
+    this.menu = document.getElementById("menu");
+    this.start = document.getElementById("start");
+  }
+
+  displayHighScore(highScore) {
+    document.getElementById(
+      "best-score"
+    ).textContent = `High Score: ${highScore}`;
+  }
+
+  textShield(shield) {
+    if (shield === 0) {
+      this.text.innerText = "Shield is broken";
+    } else {
+      this.text.innerText = "Shield is breaking";
+    }
+  }
+
+  cancelText() {
+    this.text.innerText = "Cancelled successfully";
+  }
+
+  updateScoreDisplay(score) {
+    this.uiScore.innerText = `Cancelled Spell: ${score}`;
+  }
+
+  updateShieldDisplay(shield) {
+    this.uiShield.innerText = `Shield: ${shield}`;
+  }
 }
 
-class Wizard{
+//highscore class done
+class HighScoreManager {
+  saveHighScore(newScore) {
+    localStorage.setItem("highScore", newScore.toString());
+  }
+
+  saveHighTime(newHighTime) {
+    localStorage.setItem("highTime", newHighTime);
+  }
+
+  loadHighScore() {
+    const highScore = parseInt(localStorage.getItem("highScore") || "0", 10);
+    return highScore;
+  }
+
+  loadHighTime() {
+    const highTime = localStorage.getItem("highTime" || "00:00");
+    return highTime;
+  }
+
+  updateHighScore(currentScore) {
+    const highScore = loadHighScore();
+
+    if (currentScore > highScore) {
+      saveHighScore(currentScore);
+      console.log("New high score saved: ", currentScore);
+    }
+  }
+
+  displayHighScore() {
+    const highScore = this.loadHighScore();
+    // Update the UI with the high score
+    console.log(`High Score: ${highScore}`); // Or update a DOM element
+  }
+}
+
+//Sound class done
+class SoundManager {
+  constructor() {
+    this.sounds = [
+      "assets/game_music.mp3",
+      "assets/spell.mp3",
+      "assets/shield_hit.mp3",
+      "assets/shield_break.mp3",
+      "assets/cancel.mp3",
+    ];
+    this.gameSound = null; // It's not clear what this is for, initializing for clarity
+    this.sound = document.createElement("audio");
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+  }
+
+  loadSound(index, loop = false) {
+    if (index >= 0 && index < this.sounds.length) {
+      this.sound.src = this.sounds[index];
+      this.sound.loop = loop;
+    } else {
+      console.error("Sound index out of bounds");
+    }
+  }
+
+  play() {
+    this.sound
+      .play()
+      .catch((error) => console.error("Error playing sound:", error));
+  }
+
+  pause() {
+    this.sound.pause();
+  }
+
+  stop() {
+    this.sound.pause();
+    this.sound.currentTime = 0;
+  }
+}
+
+class Wizard {
   //gerer les characteristiques du joueur
+  constructor() {
+    this.wizard = document.getElementById("wizard");
+    this.charArray = [];
+    this.gameSound = new SoundManager();
+    this.gameUI = new GameUI()
+  }
+
+  cancelSpell() {
+    if (text.toLowerCase() === currentDemonText.toLocaleLowerCase()) {
+      this.gameSound.loadSound(4);
+      this.gameSound.play();
+      this.gameUI.cancelText();
+      this.charArray.length = 0;
+      currentDemonText = getRandomDemonWord();
+      demonTextX = canvas.width;
+      demonTextY = 0.1 + Math.random() * 0.8;
+      updateCanvas();
+      score++;
+      updateScoreDisplay(); // Update the score display
+    }
+  }
+
+  input() {}
 }
 
-class Demon{
+class Demon {
   //gerer les characteristiques du demon
+  constructor() {
+    this.speed = 4;
+    this.demonWord = [
+      "fire",
+      "magic",
+      "silence",
+      "tornado",
+      "doom",
+      "storm",
+      "deflagration",
+      "destruction",
+      "malediction",
+      "rock",
+      "tsunami",
+    ];
+    this.currentDemonText = getRandomDemonWord();
+    this.demonTextX = canvas.width * 2; // horizontal axis for demon spell initialized
+    this.demonTextY = 0.1 + Math.random() * 0.8;
+  }
+
+  spell() {}
+
+  getRandomDemonWord() {
+    const randomIndex = Math.floor(Math.random() * demonWord.length);
+    return demonWord[randomIndex];
+  }
 }
 
 /*
@@ -41,7 +320,6 @@ function adjustCanvasForHighDPI(canvas) {
 document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("canvas");
   adjustCanvasForHighDPI(canvas);
-  displayHighScore();
 });
 const diff = document.getElementById("diff");
 
@@ -140,31 +418,31 @@ function startGame() {
   updateCanvas();
 }
 
-function updateTimeDisplay() {
-  const elapsedTime = Date.now() - startTime;
-  const totalSeconds = Math.floor(elapsedTime / 1000);
-  const minutes = Math.floor(totalSeconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-  currentTimeDisplay = `${minutes}:${seconds}`;
-
-  if (time) {
-    time.innerText = currentTimeDisplay;
-  }
-}
-
-function timeToSeconds(timeStr) {
-  const [minutes, seconds] = timeStr.split(":").map(Number);
-  return minutes * 60 + seconds;
-}
-
+// Common function to format time from total seconds to "MM:SS" format
 function formatTime(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60)
     .toString()
     .padStart(2, "0");
   const seconds = (totalSeconds % 60).toString().padStart(2, "0");
   return `${minutes}:${seconds}`;
+}
+
+// Optimized updateTimeDisplay to use the common formatTime function
+function updateTimeDisplay() {
+  const elapsedTime = Date.now() - startTime; // Assuming startTime is defined elsewhere
+  const totalSeconds = Math.floor(elapsedTime / 1000);
+  const currentTimeDisplay = formatTime(totalSeconds); // Use the common formatTime function
+
+  if (time) {
+    // Assuming 'time' is a DOM element defined elsewhere
+    time.innerText = currentTimeDisplay;
+  }
+}
+
+// Converts a "MM:SS" string to total seconds
+function timeToSeconds(timeStr) {
+  const [minutes, seconds] = timeStr.split(":").map(Number);
+  return minutes * 60 + seconds;
 }
 
 function updateCanvas() {
@@ -204,7 +482,6 @@ function updateCanvas() {
 
   // Demon text movement logic
   demonTextX -= speed;
-  let measuredWidth = ctx.measureText(currentDemonText).width;
   if (demonTextX <= 0) {
     demonTextX = canvas.width;
     gameOver();
